@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approbation des Retraits</title>
+    <style>
+        /* Styles existants... */
+        /* Ajoute ces nouvelles classes pour styliser le champ de date */
+        .date-input {
+            margin-top: 10px;
+            width: calc(100% - 20px);
+            padding: 8px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Approbation des Retraits</h2>
+    <ul id="approvalList"></ul>
+</div>
+
+<script>
+    // Fonction pour charger les retraits en attente
+    function loadWithdrawalsForApproval() {
+        var withdrawalHistory = JSON.parse(localStorage.getItem('withdrawalHistory')) || [];
+        var approvalList = document.getElementById('approvalList');
+
+        approvalList.innerHTML = '';
+        withdrawalHistory.forEach(function(entry, index) {
+            if (entry.status === "En attente d'approbation") {
+                var listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    <div>
+                        <div class="item-header">Montant: ${entry.amount} FCFA</div>
+                        <div class="item-detail">Date: ${entry.date}</div>
+                        <input type="datetime-local" class="date-input" id="newDate${index}">
+                        <button class="approve" onclick="modifyDate(${index})">Modifier la date</button>
+                    </div>
+                    <div class="buttons">
+                        <button class="approve" onclick="approveWithdrawal(${index})">Approuver</button>
+                        <button class="reject" onclick="rejectWithdrawal(${index})">Rejeter</button>
+                    </div>
+                `;
+                approvalList.appendChild(listItem);
+            }
+        });
+    }
+
+    // Fonction pour approuver un retrait
+    function approveWithdrawal(index) {
+        var withdrawalHistory = JSON.parse(localStorage.getItem('withdrawalHistory')) || [];
+        withdrawalHistory[index].status = "Approuvé";
+        localStorage.setItem('withdrawalHistory', JSON.stringify(withdrawalHistory));
+        loadWithdrawalsForApproval(); // Rafraîchir la liste
+    }
+
+    // Fonction pour rejeter un retrait
+    function rejectWithdrawal(index) {
+        var withdrawalHistory = JSON.parse(localStorage.getItem('withdrawalHistory')) || [];
+        withdrawalHistory[index].status = "Rejeté";
+        localStorage.setItem('withdrawalHistory', JSON.stringify(withdrawalHistory));
+        loadWithdrawalsForApproval(); // Rafraîchir la liste
+    }
+
+    // Fonction pour modifier la date d'une transaction
+    function modifyDate(index) {
+        var newDateValue = document.getElementById(`newDate${index}`).value;
+        if (newDateValue) {
+            var withdrawalHistory = JSON.parse(localStorage.getItem('withdrawalHistory')) || [];
+            withdrawalHistory[index].date = new Date(newDateValue).toLocaleString();
+            localStorage.setItem('withdrawalHistory', JSON.stringify(withdrawalHistory));
+            loadWithdrawalsForApproval(); // Rafraîchir la liste
+        }
+    }
+
+    // Charger les retraits en attente au démarrage
+    loadWithdrawalsForApproval();
+</script>
+
+</body>
+</html>
